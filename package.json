@@ -1,0 +1,24 @@
+{
+  "name": "easy-schedule",
+  "version": "0.0.2",
+  "author": "yetiklee",
+  "main": "index.html",
+  "description": "easy commands for scheduling things",
+  "license": "MIT",
+  "targets": {
+    "main": false
+  },
+  "logseq": {
+    "icon": "./icon.png",
+    "id": "easy-schedule"
+  },
+  "default": "dist/index.html",
+  "scripts": {
+    "dev": "parcel ./index.html --public-url ./",
+    "build": "parcel build --public-url . --no-source-maps index.html"
+  },
+  "devDependencies": {
+    "@logseq/libs": "^0.0.14",
+    "parcel": "^2.8.3"
+  }
+}
