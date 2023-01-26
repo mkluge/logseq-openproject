@@ -20,5 +20,8 @@
   "devDependencies": {
     "@logseq/libs": "^0.0.14",
     "parcel": "^2.8.3"
+  },
+  "dependencies": {
+    "axios": "^1.2.4"
   }
 }
