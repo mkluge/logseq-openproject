@@ -1,16 +1,16 @@
 {
-  "name": "easy-schedule",
-  "version": "0.0.2",
+  "name": "logseq-openproject",
+  "version": "0.0.1",
   "author": "yetiklee",
-  "main": "index.html",
-  "description": "easy commands for scheduling things",
+  "main": "dist/index.html",
+  "description": "work with OpenProject packages in logseq",
   "license": "MIT",
   "targets": {
     "main": false
   },
   "logseq": {
     "icon": "./icon.png",
-    "id": "easy-schedule"
+    "id": "logseq-openproject"
   },
   "default": "dist/index.html",
   "scripts": {
@@ -19,7 +19,15 @@
   },
   "devDependencies": {
     "@logseq/libs": "^0.0.14",
-    "parcel": "^2.8.3"
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "buffer": "^5.7.1",
+    "eslint": "^8.0.1",
+    "eslint-config-standard-with-typescript": "^33.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "parcel": "^2.8.3",
+    "typescript": "*"
   },
   "dependencies": {
     "axios": "^1.2.4"
