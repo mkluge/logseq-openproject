@@ -1,3 +1,4 @@
+import { ProjectModel } from "./openproject_api/api";
 import "@logseq/libs";
 
 async function main() {
@@ -25,16 +26,28 @@ SCHEDULED: <` +
 }
 
 import * as lcfg from "./config.json";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import { Configuration, ProjectsApi } from "./openproject_api";
+
+const configuration = new Configuration({
+  basePath: lcfg.API_URL,
+  username: "apikey",
+  password: lcfg.API_KEY,
+});
+
 console.log("loaded config with URL " + lcfg.API_URL);
 
-const data = await axios.get(lcfg.API_URL + "/projects", {
-  auth: {
-    username: "apikey",
-    password: lcfg.API_KEY,
-  },
-});
-console.log(data);
+//const data = await axios.get(lcfg.API_URL + "/projects", {
+//  auth: {
+//    username: "apikey",
+//    password: lcfg.API_KEY,
+//  },
+//});
+//console.log(data);
 
-console.log("startup logseq easy schedule");
+const projectsApi = new ProjectsApi(configuration);
+const projects: AxiosResponse<ProjectModel[], any> =
+  await projectsApi.listProjects();
+console.log(projects);
+
 logseq.ready(main).catch(console.error);
