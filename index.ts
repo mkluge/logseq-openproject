@@ -32,17 +32,25 @@ async function main() {
     console.log(me);
     return;
   }
-  const myself = me.data.name;
+  const myself: String = me.data.name;
   const workPackagesApi = new WorkPackagesApi(configuration);
   const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
-  console.log(JSON.stringify(filterMyself))
-  const filter: WorkPackagesApiListWorkPackagesRequest = {
-    filters: JSON.stringify(filterMyself),
+  const filter = {
+    filters: JSON.stringify(filterMyself)
   };
-  const workPackages = await workPackagesApi.listWorkPackages(filter);
-  workPackages.data._embedded.elements.map(function (wp) {
-    console.log(wp._links.assignee?.title);
+  // FIXME: would like to call listWorkPackages with the filter
+  //        but it throws a server error, probably incorrect usage
+  //        of this feature
+  const workPackages = await workPackagesApi.listWorkPackages();
+  const myWorkPackages = workPackages.data._embedded.elements.filter(function (
+    wp
+  ) {
+    if (wp._links.assignee?.title == myself) {
+      return true;
+    }
+    return false;
   });
+  console.log(myWorkPackages);
 }
 
 logseq.ready(main).catch(console.error);
