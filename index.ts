@@ -2,7 +2,7 @@
 // import * as lcfg from "./config.json";
 // import axios, { AxiosResponse } from "axios";
 import "@logseq/libs";
-import { Configuration, ProjectsApi } from "./openproject_api";
+import { Configuration, ConfigurationApiAxiosParamCreator, ProjectsApi, WorkPackagesApi } from "./openproject_api";
 
 async function main() {
   console.log("2")
@@ -20,6 +20,8 @@ async function main() {
   const projectsApi = new ProjectsApi(configuration);
   const projects = await projectsApi.listProjects();
   console.log(projects);
+  const workPackagesApi = new WorkPackagesApi(configuration);
+  console.log(await workPackagesApi.listWorkPackages());
 }
 
 logseq.ready(main).catch(console.error);
