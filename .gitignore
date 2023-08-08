@@ -3,3 +3,6 @@ node_modules/
 .vscode
 .parcel*
 config.json
+.DS_Store
+openproject_api/generated_api_client/
+yarn-error.log
