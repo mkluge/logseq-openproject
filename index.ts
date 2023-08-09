@@ -11,20 +11,35 @@ import {
   UsersApi,
 } from "./openproject_api";
 
+
 async function main() {
-  const lcfg = {
+
+  var openProjectToken = "";
+  var openProjectURL = "";
+  
+  const loadSettings = () => {
+    if (logseq.settings ) {
+      openProjectToken = logseq.settings["OpenProjectToken"];
+      openProjectURL = logseq.settings["OpenProjectURL"];
+    }  
+  }
+
+  loadSettings();
+  logseq.onSettingsChanged(loadSettings);
+
+  /*const lcfg = {
     API_URL: "http://localhost:8080",
     API_KEY: "aa5a27e52ee6671f4aac50df6471b1f4a84e571f64c8660e2d35bdfa1ae8438c",
-  };
+  };*/
   const configuration = new Configuration({
-    basePath: lcfg.API_URL,
+    basePath: openProjectURL,
     username: "apikey",
-    password: lcfg.API_KEY,
+    password: openProjectToken,
   });
 
   settingsUI();
 
-  console.log("loaded config with URL " + lcfg.API_URL);
+  console.log("loaded config with URL " + openProjectURL);
   // get my name in OpenProject
   const usersApi = new UsersApi(configuration);
   const me = await usersApi.viewUser({
