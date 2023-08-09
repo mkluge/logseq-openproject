@@ -16,32 +16,29 @@ async function main() {
 
   var openProjectToken = "";
   var openProjectURL = "";
+  var usersApi : UsersApi = new UsersApi();
+  var workPackagesApi : WorkPackagesApi = new WorkPackagesApi();
   
   const loadSettings = () => {
     if (logseq.settings ) {
       openProjectToken = logseq.settings["OpenProjectToken"];
       openProjectURL = logseq.settings["OpenProjectURL"];
+      const openProjectConfiguration = new Configuration({
+        basePath: openProjectURL,
+        username: "apikey",
+        password: openProjectToken,
+      });
+      usersApi = new UsersApi(openProjectConfiguration);
+      workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
     }  
   }
 
   loadSettings();
   logseq.onSettingsChanged(loadSettings);
-
-  /*const lcfg = {
-    API_URL: "http://localhost:8080",
-    API_KEY: "aa5a27e52ee6671f4aac50df6471b1f4a84e571f64c8660e2d35bdfa1ae8438c",
-  };*/
-  const configuration = new Configuration({
-    basePath: openProjectURL,
-    username: "apikey",
-    password: openProjectToken,
-  });
-
   settingsUI();
 
   console.log("loaded config with URL " + openProjectURL);
   // get my name in OpenProject
-  const usersApi = new UsersApi(configuration);
   const me = await usersApi.viewUser({
     id: "me",
   });
@@ -51,7 +48,6 @@ async function main() {
     return;
   }
   const myself: String = me.data.name;
-  const workPackagesApi = new WorkPackagesApi(configuration);
   const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
   const filter = {
     filters: JSON.stringify(filterMyself)
