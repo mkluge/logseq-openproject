@@ -2,6 +2,7 @@
 // import * as lcfg from "./config.json";
 // import axios, { AxiosResponse } from "axios";
 import "@logseq/libs";
+import { settingsUI } from "./settings"
 import {
   Configuration,
   ProjectsApi,
@@ -20,6 +21,8 @@ async function main() {
     username: "apikey",
     password: lcfg.API_KEY,
   });
+
+  settingsUI();
 
   console.log("loaded config with URL " + lcfg.API_URL);
   // get my name in OpenProject
