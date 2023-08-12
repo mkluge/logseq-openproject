@@ -17,6 +17,7 @@ var workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
 var myself: string = "";
 
 async function updateWorkPackages() {
+  console.log("update work packages")
   const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
   const filter = {
     filters: JSON.stringify(filterMyself),
@@ -35,11 +36,9 @@ function website(x: number, y: number, text: string, tasks: string[] = []) {
     key: "opeproject-task-selection",
     template: `
     <div padding: 10px; overflow: auto; data-on-load="console.log('popup')" onLoad="console.log('popup')">
-    <input type="text" id="filterInput" placeholder="Filter..." data-on-change="setupDialog"/>
+    <input data-on-keyup="openCalendar" type="text" id="filterInput" placeholder="Filter..."></input>
     <div id="listContainer"></div>
     </div>
-    <button data-on-click="openCalendar" onclick="alert('abc')' style="opacity: .6; display: inline-flex; padding-left: 3px;'>
-   asdfasfsdas</button>
   `,
     style: {
       left: x + "px",
@@ -68,7 +67,7 @@ async function showUI(x: number, y: number) {
   );
 }
 
-async function updateFilteredList() {
+function updateFilteredList() {
   const inputField = document.getElementById(
     "filterInput"
   ) as HTMLInputElement;
@@ -87,7 +86,7 @@ async function updateFilteredList() {
   }
 }
 
-async function setupDialog(e: any) {
+function setupDialog() {
   console.log("run setupDialog");
   // Attach an event listener to the input field to trigger filtering
   const inputField = document.getElementById(
@@ -135,10 +134,10 @@ async function main() {
 
   logseq.provideModel({
     openCalendar () {
-      console.log("hi, calendar");
+      console.log("hi, calendar: ");
     },
     updateFilteredList,
-    setupDialog
+//    setupDialog
   });
   
   logseq.Editor.registerSlashCommand("openproject", async () => {
