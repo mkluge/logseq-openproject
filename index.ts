@@ -6,6 +6,8 @@ function main() {
   logseq.provideModel({
     openCalendar () {
       console.log("hi, calendar");
+      console.log(document.getElementById('tryFindMe'));
+      console.log(document.getElementById('app')?.childNodes);
     },
   });
   logseq.Editor.registerSlashCommand("openproject", async () => {
@@ -13,7 +15,7 @@ function main() {
       key: 'miktest',
       template: `
         <button
-        class="pomodoro-timer-btn is-start"
+        id="tryFindMe"
         data-on-click="openCalendar">
         Go Calendar
         </button>
