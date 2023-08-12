@@ -35,8 +35,8 @@ function website(x: number, y: number, text: string, tasks: string[] = []) {
   return {
     key: "opeproject-task-selection",
     template: `
-    <div padding: 10px; overflow: auto; data-on-load="console.log('popup')" onLoad="console.log('popup')">
-    <input data-on-keyup="openCalendar" type="text" id="filterInput" placeholder="Filter..."></input>
+    <div data-on-visibilitychange="setupDialog">
+    <input data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="Filter..."/>
     <div id="listContainer"></div>
     </div>
   `,
@@ -66,13 +66,21 @@ async function showUI(x: number, y: number) {
     )
   );
 }
-
-function updateFilteredList() {
-  const inputField = document.getElementById(
+/*
+async function updateFilteredList(e: any) {
+  console.log(e);
+  console.log([...document.querySelectorAll('[id]')].map(e => e.id).join(", "));
+  console.log(document.querySelectorAll('*[id]'))
+  const inputField = await logseq.App.queryElementById(
     "filterInput"
-  ) as HTMLInputElement;
-  const listContainer = document.getElementById("listContainer");
-  const filterText = inputField.value.toLowerCase();
+  ) as string;
+  const ifreal = document.getElementById(inputField);
+  console.log(inputField);
+  console.log(ifreal);
+  const listContainer = await logseq.App.queryElementById("listContainer");
+  console.log(listContainer);
+  const filterText = (inputField.valueOf() as string).toLowerCase();
+  console.log(filterText);
   if (listContainer) {
     listContainer.innerHTML = "";
     const filteredItems = myWorkPackages.filter((item) =>
@@ -84,18 +92,19 @@ function updateFilteredList() {
       listContainer.appendChild(listItem);
     });
   }
-}
+}*/
 
-function setupDialog() {
+async function setupDialog() {
   console.log("run setupDialog");
   // Attach an event listener to the input field to trigger filtering
   const inputField = document.getElementById(
     "filterInput"
   ) as HTMLInputElement;
+  console.log(inputField);
   inputField.focus();
   inputField.addEventListener("input", updateFilteredList);
   // Initial rendering of the list
-  updateFilteredList();
+  await updateFilteredList();
 }
 
 async function main() {
@@ -136,8 +145,30 @@ async function main() {
     openCalendar () {
       console.log("hi, calendar: ");
     },
-    updateFilteredList,
-//    setupDialog
+  
+    async updateFilteredList(e: any) {
+      console.log(e);
+      const inputField = document.getElementById(
+        "filterInput"
+      ) as HTMLInputElement;
+      console.log(inputField);
+      const listContainer = await logseq.App.queryElementById("listContainer");
+      console.log(listContainer);
+      const filterText = (inputField.valueOf() as string).toLowerCase();
+      console.log(filterText);
+      if (listContainer) {
+        listContainer.innerHTML = "";
+        const filteredItems = myWorkPackages.filter((item) =>
+          item.subject.toLowerCase().includes(filterText)
+        );
+        filteredItems.forEach((item) => {
+          const listItem = document.createElement("div");
+          listItem.textContent = item.subject;
+          listContainer.appendChild(listItem);
+        });
+      }
+    },
+    setupDialog,
   });
   
   logseq.Editor.registerSlashCommand("openproject", async () => {
