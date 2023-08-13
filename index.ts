@@ -66,18 +66,13 @@ async function showUI(x: number, y: number) {
     )
   );
 }
-/*
+
 async function updateFilteredList(e: any) {
-  console.log(e);
-  console.log([...document.querySelectorAll('[id]')].map(e => e.id).join(", "));
-  console.log(document.querySelectorAll('*[id]'))
-  const inputField = await logseq.App.queryElementById(
+  const inputField = parent.document.getElementById(
     "filterInput"
-  ) as string;
-  const ifreal = document.getElementById(inputField);
+  ) as HTMLInputElement;
   console.log(inputField);
-  console.log(ifreal);
-  const listContainer = await logseq.App.queryElementById("listContainer");
+  const listContainer = parent.document.getElementById("listContainer");
   console.log(listContainer);
   const filterText = (inputField.valueOf() as string).toLowerCase();
   console.log(filterText);
@@ -92,12 +87,12 @@ async function updateFilteredList(e: any) {
       listContainer.appendChild(listItem);
     });
   }
-}*/
+}
 
 async function setupDialog() {
   console.log("run setupDialog");
   // Attach an event listener to the input field to trigger filtering
-  const inputField = document.getElementById(
+  const inputField = parent.document.getElementById(
     "filterInput"
   ) as HTMLInputElement;
   console.log(inputField);
@@ -145,29 +140,7 @@ async function main() {
     openCalendar () {
       console.log("hi, calendar: ");
     },
-  
-    async updateFilteredList(e: any) {
-      console.log(e);
-      const inputField = document.getElementById(
-        "filterInput"
-      ) as HTMLInputElement;
-      console.log(inputField);
-      const listContainer = await logseq.App.queryElementById("listContainer");
-      console.log(listContainer);
-      const filterText = (inputField.valueOf() as string).toLowerCase();
-      console.log(filterText);
-      if (listContainer) {
-        listContainer.innerHTML = "";
-        const filteredItems = myWorkPackages.filter((item) =>
-          item.subject.toLowerCase().includes(filterText)
-        );
-        filteredItems.forEach((item) => {
-          const listItem = document.createElement("div");
-          listItem.textContent = item.subject;
-          listContainer.appendChild(listItem);
-        });
-      }
-    },
+    updateFilteredList,
     setupDialog,
   });
   
