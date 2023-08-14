@@ -17,7 +17,7 @@ var workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
 var myself: string = "";
 
 async function updateWorkPackages() {
-  console.log("update work packages")
+  console.log("update work packages");
   const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
   const filter = {
     filters: JSON.stringify(filterMyself),
@@ -35,8 +35,8 @@ function website(x: number, y: number, text: string, tasks: string[] = []) {
   return {
     key: "opeproject-task-selection",
     template: `
-    <div data-on-visibilitychange="setupDialog">
-    <input data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="Filter..."/>
+    <div style="padding: 10px; overflow: auto;" data-on-load="setupDialog">
+    <input data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="type to filter ..."/>
     <div id="listContainer"></div>
     </div>
   `,
@@ -65,41 +65,6 @@ async function showUI(x: number, y: number) {
       myWorkPackages.map((wp) => wp.subject)
     )
   );
-}
-
-async function updateFilteredList(e: any) {
-  const inputField = parent.document.getElementById(
-    "filterInput"
-  ) as HTMLInputElement;
-  console.log(inputField);
-  const listContainer = parent.document.getElementById("listContainer");
-  console.log(listContainer);
-  const filterText = (inputField.valueOf() as string).toLowerCase();
-  console.log(filterText);
-  if (listContainer) {
-    listContainer.innerHTML = "";
-    const filteredItems = myWorkPackages.filter((item) =>
-      item.subject.toLowerCase().includes(filterText)
-    );
-    filteredItems.forEach((item) => {
-      const listItem = document.createElement("div");
-      listItem.textContent = item.subject;
-      listContainer.appendChild(listItem);
-    });
-  }
-}
-
-async function setupDialog() {
-  console.log("run setupDialog");
-  // Attach an event listener to the input field to trigger filtering
-  const inputField = parent.document.getElementById(
-    "filterInput"
-  ) as HTMLInputElement;
-  console.log(inputField);
-  inputField.focus();
-  inputField.addEventListener("input", updateFilteredList);
-  // Initial rendering of the list
-  await updateFilteredList();
 }
 
 async function main() {
@@ -137,13 +102,43 @@ async function main() {
   myself = me.data.name;
 
   logseq.provideModel({
-    openCalendar () {
-      console.log("hi, calendar: ");
+    async updateFilteredList() {
+      const inputField = parent.document.getElementById(
+        "filterInput"
+      ) as HTMLInputElement;
+      const listContainer = parent.document.getElementById("listContainer");
+      console.log(listContainer);
+      const filterText = inputField.value.toLowerCase();
+      if (listContainer) {
+        listContainer.innerHTML = "";
+        const filteredItems = myWorkPackages.filter((item) =>
+          item.subject.toLowerCase().includes(filterText)
+        );
+        filteredItems.forEach((item) => {
+          const listItem = document.createElement("div");
+          listItem.textContent = item.subject;
+          listContainer.appendChild(listItem);
+        });
+      }
     },
-    updateFilteredList,
-    setupDialog,
+
+    async setupDialog() {
+      console.log("run setupDialog");
+      // Attach an event listener to the input field to trigger filtering
+      const inputField = parent.document.getElementById(
+        "filterInput"
+      ) as HTMLInputElement;
+      if (inputField) {
+        inputField.focus();
+        inputField.addEventListener("input", updateFilteredList);
+        // Initial rendering of the list
+        await updateFilteredList();
+      } else {
+        console.log("no input field");
+      }
+    },
   });
-  
+
   logseq.Editor.registerSlashCommand("openproject", async () => {
     const cursorat = await logseq.Editor.getEditingCursorPosition();
     const x = cursorat ? cursorat.rect.x : 300;
