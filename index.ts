@@ -71,19 +71,13 @@ function updateFilteredList() {
 }
 
 function createUI() {
-  const htmlcode = website(
-    "Packages",
-    myWorkPackages
-      .map((wp) => {
-        return "<li>" + wp.subject + "</li>";
-      })
-      .join("")
-  );
+  const htmlcode = website("Packages", "");
   const app = document.getElementById("app");
   if (app) {
     app.innerHTML = htmlcode;
   } else {
     console.log("app element not found");
+    return;
   }
 
   const styles = `.styled-list li {
@@ -109,7 +103,7 @@ function createUI() {
   styleSheet.innerText = styles;
   document.head.appendChild(styleSheet);
 
-  filterInput = document.querySelector("filterInput") as HTMLInputElement;
+  filterInput = document.getElementById("filterInput") as HTMLInputElement;
   if (filterInput == null) {
     console.log("unable to add elements to app");
     return;
@@ -156,6 +150,7 @@ async function showUI(x: number, y: number) {
     left: y + "px",
   });
   selectedElement = -1;
+  updateFilteredList();
   logseq.showMainUI();
 }
 
