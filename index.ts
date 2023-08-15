@@ -31,20 +31,20 @@ async function updateWorkPackages() {
   );
 }
 
-function website(x: number, y: number, text: string, tasks: string[] = []) {
+function website(x: number, y: number, text: string, tasks: string = "") {
   return {
     key: "opeproject-task-selection",
     template: `
-    <div style="padding: 10px; overflow: auto;" data-on-load="ping" data-on-visibilitychange="ping">
-    <input autofocus data-on-focusin="setupDialog" data-on-keyup="updateFilteredList" type="text" id="filterInput" data-on-visibilitychange="ping" placeholder="type to filter ..."/>
-    <div id="listContainer"></div>
+    <div style="padding: 10px; overflow: auto;">
+    <input style="padding: 10px; margin-bottom: 10px;" autofocus data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="type to filter ..."/>
+    <ul class="styled-list" id="listContainer">${tasks}</ul>
     </div>
   `,
     style: {
       left: x + "px",
       top: y + "px",
       width: "500px",
-      height: "300px",
+      height: "auto",
       backgroundColor: "var(--ls-primary-background-color)",
       color: "var(--ls-primary-text-color)",
       boxShadow: "1px 2px 5px var(--ls-secondary-background-color)",
@@ -62,16 +62,11 @@ async function showUI(x: number, y: number) {
       x,
       y,
       "Packages",
-      myWorkPackages.map((wp) => wp.subject)
+      myWorkPackages.map((wp) => {
+        return "<li>" + wp.subject + "</li>";
+      }).join("")
     )
   );
-  // not working as well
-  site.ready().then(()=>{
-    const inputField = parent.document.getElementById(
-      "filterInput"
-    ) as HTMLInputElement;
-    console.log(inputField);  
-  }).catch();
 }
 
 async function main() {
@@ -108,6 +103,33 @@ async function main() {
   }
   myself = me.data.name;
 
+  logseq.provideStyle(`
+    .styled-list {
+      padding: 0;
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .styled-list li {
+      padding: 0px;
+      color: #000; /* Black text color */
+    }
+    
+    .styled-list li:nth-child(odd) {
+      background-color: #0057B7; /* Blue background color */
+      color: #FFFFFF; /* Black text color */
+    }
+    
+    .styled-list li:nth-child(even) {
+      background-color: #003797; /* Yellow background color */
+      color: #FFFFFF; /* Black text color */
+    }
+    
+    .styled-list li.highlighted {
+      background-color: #FFDD00; /* Yellow background color */
+      color: #000000; /* Black text color */
+    }`
+  );
   logseq.provideModel({
     async updateFilteredList() {
       const inputField = parent.document.getElementById(
@@ -127,26 +149,6 @@ async function main() {
           listContainer.appendChild(listItem);
         });
       }
-    },
-
-    async setupDialog() {
-      console.log("run setupDialog");
-      // Attach an event listener to the input field to trigger filtering
-      const inputField = parent.document.getElementById(
-        "filterInput"
-      ) as HTMLInputElement;
-      if (inputField) {
-        inputField.focus();
-        inputField.addEventListener("input", updateFilteredList);
-        // Initial rendering of the list
-        await updateFilteredList();
-      } else {
-        console.log("no input field");
-      }
-    },
-
-    ping() {
-      console.log("ping")
     },
   });
 
