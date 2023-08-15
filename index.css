@@ -3,11 +3,10 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0,0,0,0);
     overflow-x: hidden;
     overflow-y: auto;
     color: white;
-    opacity: 1;
 }
   
 #app {
@@ -15,17 +14,43 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 1;
 }
 
+.rounded{
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+.maindiv {
+    border: 3px solid #AAAAAA;
+    background-color: #292929;
+    width: 500px; 
+    height: auto;
+    color: #FFFFFF;
+}
+
+.filterInput {
+    padding: 2px;
+    background-color: #292929;
+    color: #FFFFFF;
+}
+
+.headline {
+    background-color: #252525;
+    font-weight: bold;
+    padding: 10px;
+}
 .styled-list {
     list-style: none;
     padding: 0;
     margin-left: 0;
+    margin-block-start: 10px;
+    margin-block-end: 3px;
 }
 
 .styled-list li {
-    padding: 0px;
+    padding: 4px;
+    margin-top: 2px;
     color: #000; /* Black text color */
 }
   

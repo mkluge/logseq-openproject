@@ -36,19 +36,17 @@ async function updateWorkPackages() {
 
 function website(text: string, tasks: string = ""): string {
   return `
-    <div style="width: 500px; height: auto;
-                backgroundColor: #D9D9D9;
-                color: #FFFFF;
-                boxShadow: 1px 2px 5px #C9C9C9">
-      <h3>${text}</h3>
+  <div class="rounded">
+    <div class="maindiv">
+      <div class="headline">${text}</div>
       <div style="padding: 10px; overflow: auto;">
-        <input style="padding: 10px; margin-bottom: 10px;" 
-              type="text" id="filterInput" 
+        <input class="filterInput" type="text" id="filterInput" 
               placeholder="type to filter ..."/>
         <ul class="styled-list"
             id="listContainer"></ul>
       </div>
     </div>
+  </div>
   `;
 }
 
@@ -66,7 +64,7 @@ function updateFilteredList() {
 }
 
 function createUI() {
-  const htmlcode = website("Packages", "");
+  const htmlcode = website("Select OpenProject Task", "");
   const app = document.getElementById("app");
   if (app) {
     app.innerHTML = htmlcode;
