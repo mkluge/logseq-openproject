@@ -65,10 +65,11 @@ function updateFilteredList() {
     selectedElement = -1;
   } else {
     selectedElement = 0;
+    listContainer.children[selectedElement].classList.add("highlighted");
   }
 }
 
-function createUI() {
+function createUI(): void {
   const htmlcode = website("Select OpenProject Task", "");
   const app = document.getElementById("app");
   if (app) {
