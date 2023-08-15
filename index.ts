@@ -15,6 +15,8 @@ var myWorkPackages: WorkPackageModel[];
 var usersApi: UsersApi = new UsersApi();
 var workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
 var myself: string = "";
+var selectedElement: number = -1;
+var filterInput: HTMLInputElement;
 
 async function updateWorkPackages() {
   console.log("update work packages");
@@ -31,13 +33,60 @@ async function updateWorkPackages() {
   );
 }
 
-function website(x: number, y: number, text: string, tasks: string = "") : string {
-  const list_style = `
-    padding: 0;
-    list-style: none;
-    margin-left: 0;
+function website(text: string, tasks: string = ""): string {
+  const ul_style = "padding: 0; list-style: none; margin-left: 0;";
+  return `
+    <div style="width: 500px, height: auto,
+                backgroundColor: var(--ls-primary-background-color),
+                color: var(--ls-primary-text-color),
+                boxShadow: 1px 2px 5px var(--ls-secondary-background-color)">
+      <h3>${text}</h3>
+      <div style="padding: 10px; overflow: auto; 
+        <input style="padding: 10px; margin-bottom: 10px;" 
+              data-on-keyup="updateFilteredList" 
+              type="text" id="filterInput" 
+              placeholder="type to filter ..."/>
+        <ul style="${ul_style}" id="listContainer"></ul>
+      </div>
+    </div>
+  `;
+}
 
-  .styled-list li {
+function updateFilteredList() {
+  const inputField = document.getElementById("filterInput") as HTMLInputElement;
+  const listContainer = parent.document.getElementById("listContainer");
+  console.log(listContainer);
+  const filterText = inputField.value.toLowerCase();
+  if (listContainer) {
+    listContainer.innerHTML = "";
+    const filteredItems = myWorkPackages.filter((item) =>
+      item.subject.toLowerCase().includes(filterText)
+    );
+    filteredItems.forEach((item) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = item.subject;
+      listContainer.appendChild(listItem);
+    });
+  }
+}
+
+function createUI() {
+  const htmlcode = website(
+    "Packages",
+    myWorkPackages
+      .map((wp) => {
+        return "<li>" + wp.subject + "</li>";
+      })
+      .join("")
+  );
+  const app = document.getElementById("app");
+  if (app) {
+    app.innerHTML = htmlcode;
+  } else {
+    console.log("app element not found");
+  }
+
+  const styles = `.styled-list li {
     padding: 0px;
     color: #000; /* Black text color */
   }
@@ -56,40 +105,58 @@ function website(x: number, y: number, text: string, tasks: string = "") : strin
     background-color: #FFDD00; /* Yellow background color */
     color: #000000; /* Black text color */
   }`;
+  var styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
 
-  return `
-    <div style="left: ${x}px, top: ${y}px, width: 500px, height: auto,
-                backgroundColor: var(--ls-primary-background-color),
-                color: var(--ls-primary-text-color),
-                boxShadow: 1px 2px 5px var(--ls-secondary-background-color)">
-      <h3>${text}</h3>
-      <div style="padding: 10px; overflow: auto; 
-        <input style="padding: 10px; margin-bottom: 10px;" 
-              data-on-keyup="updateFilteredList" 
-              type="text" id="filterInput" 
-              placeholder="type to filter ..."/>
-        <ul style="padding: 0; list-style: none; margin-left: 0;" id="listContainer">${tasks}</ul>
-      </div>
-    </div>
-  `;
+  filterInput = document.querySelector("filterInput") as HTMLInputElement;
+  if (filterInput == null) {
+    console.log("unable to add elements to app");
+    return;
+  }
+
+  filterInput.addEventListener("keydown", async (e) => {
+    switch (e.key) {
+      case "ArrowUp":
+        console.log("Up");
+      case "ArrowDown":
+        console.log("Down");
+      case "Enter":
+        console.log("Enter");
+        logseq.hideMainUI({ restoreEditingCursor: true });
+        await logseq.Editor.insertAtEditingCursor("put stuff here");
+    }
+    e.preventDefault();
+  });
+
+  document.addEventListener(
+    "keydown",
+    function (e) {
+      console.log(e);
+      if (e.key === "ESC") {
+        logseq.hideMainUI({ restoreEditingCursor: true });
+      }
+      e.stopPropagation();
+    },
+    false
+  );
+
+  document.addEventListener("click", (e) => {
+    if (!(e.target as HTMLElement).closest(".emoji-picker__wrapper")) {
+      logseq.hideMainUI({ restoreEditingCursor: true });
+    }
+  });
+
 }
 
 async function showUI(x: number, y: number) {
   await updateWorkPackages();
-  const htmlcode =  website( 
-    x, y, "Packages",
-    myWorkPackages.map((wp) => {
-      return "<li>" + wp.subject + "</li>";
-    }).join("")
-  );
-  const app = document.getElementById('app');
-  if( app) {
-    app.innerHTML = htmlcode
-  } 
-  else{
-    console.log("app element not found")
-  }
-  logseq.showMainUI()
+  Object.assign(filterInput.style, {
+    top: x + "px",
+    left: y + "px",
+  });
+  selectedElement = -1;
+  logseq.showMainUI();
 }
 
 async function main() {
@@ -113,6 +180,7 @@ async function main() {
   loadSettings();
   logseq.onSettingsChanged(loadSettings);
   settingsUI();
+  createUI();
 
   console.log("loaded config with URL " + openProjectURL);
   // get my name in OpenProject
@@ -126,38 +194,12 @@ async function main() {
   }
   myself = me.data.name;
 
-`
-  );
-  logseq.provideModel({
-    async updateFilteredList() {
-      const inputField = parent.document.getElementById(
-        "filterInput"
-      ) as HTMLInputElement;
-      const listContainer = parent.document.getElementById("listContainer");
-      console.log(listContainer);
-      const filterText = inputField.value.toLowerCase();
-      if (listContainer) {
-        listContainer.innerHTML = "";
-        const filteredItems = myWorkPackages.filter((item) =>
-          item.subject.toLowerCase().includes(filterText)
-        );
-        filteredItems.forEach((item) => {
-          const listItem = document.createElement("div");
-          listItem.textContent = item.subject;
-          listContainer.appendChild(listItem);
-        });
-      }
-    },
-  });
-
   logseq.Editor.registerSlashCommand("openproject", async () => {
-    const cursorat = await logseq.Editor.getEditingCursorPosition();
-    const x = cursorat ? cursorat.rect.x : 300;
-    const y = cursorat ? cursorat.rect.y : 300;
+    const pos = await logseq.Editor.getEditingCursorPosition();
+    const x = pos ? pos.rect.x : 300;
+    const y = pos ? pos.rect.y : 300;
     await showUI(x, y);
   });
 }
-
-buildMainElement();
 
 logseq.ready(main).catch(console.error);
