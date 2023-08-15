@@ -17,7 +17,13 @@ html, body {
     justify-content: center;
     opacity: 1;
 }
-  
+
+.styled-list {
+    list-style: none;
+    padding: 0;
+    margin-left: 0;
+}
+
 .styled-list li {
     padding: 0px;
     color: #000; /* Black text color */

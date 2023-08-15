@@ -45,7 +45,7 @@ function website(text: string, tasks: string = ""): string {
         <input style="padding: 10px; margin-bottom: 10px;" 
               type="text" id="filterInput" 
               placeholder="type to filter ..."/>
-        <ul style="padding: 0; list-style: none; margin-left: 0;"
+        <ul class="styled-list"
             id="listContainer"></ul>
       </div>
     </div>
@@ -54,17 +54,15 @@ function website(text: string, tasks: string = ""): string {
 
 function updateFilteredList() {
   const filterText = filterInput.value.toLowerCase();
-  if (listContainer) {
-    listContainer.innerHTML = "";
-    const filteredItems = myWorkPackages.filter((item) =>
-      item.subject.toLowerCase().includes(filterText)
-    );
-    filteredItems.forEach((item) => {
-      const listItem = document.createElement("li");
-      listItem.textContent = item.subject;
-      listContainer.appendChild(listItem);
-    });
-  }
+  listContainer.innerHTML = "";
+  const filteredItems = myWorkPackages.filter((item) =>
+    item.subject.toLowerCase().includes(filterText)
+  );
+  filteredItems.forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = item.subject;
+    listContainer.appendChild(listItem);
+  });
 }
 
 function createUI() {
@@ -85,6 +83,7 @@ function createUI() {
     return;
   }
 
+  filterInput.addEventListener("input", updateFilteredList);
   filterInput.addEventListener("keydown", async (e) => {
     console.log(e);
     switch (e.key) {
@@ -107,7 +106,6 @@ function createUI() {
         e.preventDefault();
         break;
     }
-    updateFilteredList();
   });
 }
 
@@ -120,7 +118,10 @@ async function showUI(x: number, y: number) {
   selectedElement = -1;
   updateFilteredList();
   logseq.showMainUI();
-  filterInput.focus();
+  setTimeout(() => {
+    filterInput.focus();
+    filterInput.select();  
+  }, 100);
 }
 
 async function main() {
