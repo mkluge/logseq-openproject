@@ -35,8 +35,8 @@ function website(x: number, y: number, text: string, tasks: string[] = []) {
   return {
     key: "opeproject-task-selection",
     template: `
-    <div style="padding: 10px; overflow: auto;" data-on-load="setupDialog">
-    <input data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="type to filter ..."/>
+    <div style="padding: 10px; overflow: auto;" data-on-load="ping" data-on-visibilitychange="ping">
+    <input autofocus data-on-focusin="setupDialog" data-on-keyup="updateFilteredList" type="text" id="filterInput" data-on-visibilitychange="ping" placeholder="type to filter ..."/>
     <div id="listContainer"></div>
     </div>
   `,
@@ -57,7 +57,7 @@ function website(x: number, y: number, text: string, tasks: string[] = []) {
 
 async function showUI(x: number, y: number) {
   await updateWorkPackages();
-  logseq.provideUI(
+  const site = logseq.provideUI(
     website(
       x,
       y,
@@ -65,6 +65,13 @@ async function showUI(x: number, y: number) {
       myWorkPackages.map((wp) => wp.subject)
     )
   );
+  // not working as well
+  site.ready().then(()=>{
+    const inputField = parent.document.getElementById(
+      "filterInput"
+    ) as HTMLInputElement;
+    console.log(inputField);  
+  }).catch();
 }
 
 async function main() {
@@ -136,6 +143,10 @@ async function main() {
       } else {
         console.log("no input field");
       }
+    },
+
+    ping() {
+      console.log("ping")
     },
   });
 
