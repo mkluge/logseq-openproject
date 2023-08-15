@@ -39,11 +39,10 @@ function website(text: string, tasks: string = ""): string {
   <div class="rounded">
     <div class="maindiv">
       <div class="headline">${text}</div>
-      <div style="padding: 10px; overflow: auto;">
+      <div class="listContainer">
         <input class="filterInput" type="text" id="filterInput" 
               placeholder="type to filter ..."/>
-        <ul class="styled-list"
-            id="listContainer"></ul>
+        <ul class="styled-list" id="listContainer"></ul>
       </div>
     </div>
   </div>
@@ -61,6 +60,12 @@ function updateFilteredList() {
     listItem.textContent = item.subject;
     listContainer.appendChild(listItem);
   });
+  // reset selection
+  if (listContainer.childElementCount == 0) {
+    selectedElement = -1;
+  } else {
+    selectedElement = 0;
+  }
 }
 
 function createUI() {
@@ -83,14 +88,28 @@ function createUI() {
 
   filterInput.addEventListener("input", updateFilteredList);
   filterInput.addEventListener("keydown", async (e) => {
-    console.log(e);
+    // console.log(e);
+    const oldSelectedElement = selectedElement;
+    const numChilds = listContainer.childElementCount;
     switch (e.key) {
       case "ArrowUp":
-        console.log("Up");
+        if (numChilds == 0) return;
+        if (selectedElement == -1) {
+          selectedElement = 0;
+        } else if (selectedElement != 0) {
+          selectedElement -= 1;
+        }
         e.preventDefault();
         break;
       case "ArrowDown":
-        console.log("Down");
+        if (numChilds == 0) return;
+        if (selectedElement == -1) {
+          selectedElement = 0;
+        } else if (selectedElement >= numChilds - 1) {
+          selectedElement = numChilds - 1;
+        } else {
+          selectedElement += 1;
+        }
         e.preventDefault();
         break;
       case "Enter":
@@ -103,6 +122,14 @@ function createUI() {
         logseq.hideMainUI({ restoreEditingCursor: true });
         e.preventDefault();
         break;
+    }
+    if (selectedElement != oldSelectedElement) {
+      if (oldSelectedElement != -1) {
+        listContainer.children[oldSelectedElement].classList.remove(
+          "highlighted"
+        );
+      }
+      listContainer.children[selectedElement].classList.add("highlighted");
     }
   });
 }
@@ -118,7 +145,7 @@ async function showUI(x: number, y: number) {
   logseq.showMainUI();
   setTimeout(() => {
     filterInput.focus();
-    filterInput.select();  
+    filterInput.select();
   }, 100);
 }
 

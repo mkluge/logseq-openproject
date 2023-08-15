@@ -41,6 +41,12 @@ html, body {
     font-weight: bold;
     padding: 10px;
 }
+
+.listContainer {
+    padding: 10px;
+    overflow: auto;
+}
+
 .styled-list {
     list-style: none;
     padding: 0;
