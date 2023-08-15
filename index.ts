@@ -17,6 +17,7 @@ var workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
 var myself: string = "";
 var selectedElement: number = -1;
 var filterInput: HTMLInputElement;
+var listContainer: HTMLLIElement;
 
 async function updateWorkPackages() {
   console.log("update work packages");
@@ -34,29 +35,25 @@ async function updateWorkPackages() {
 }
 
 function website(text: string, tasks: string = ""): string {
-  const ul_style = "padding: 0; list-style: none; margin-left: 0;";
   return `
-    <div style="width: 500px, height: auto,
-                backgroundColor: var(--ls-primary-background-color),
-                color: var(--ls-primary-text-color),
-                boxShadow: 1px 2px 5px var(--ls-secondary-background-color)">
+    <div style="width: 500px; height: auto;
+                backgroundColor: #D9D9D9;
+                color: #FFFFF;
+                boxShadow: 1px 2px 5px #C9C9C9">
       <h3>${text}</h3>
-      <div style="padding: 10px; overflow: auto; 
+      <div style="padding: 10px; overflow: auto;">
         <input style="padding: 10px; margin-bottom: 10px;" 
-              data-on-keyup="updateFilteredList" 
               type="text" id="filterInput" 
               placeholder="type to filter ..."/>
-        <ul style="${ul_style}" id="listContainer"></ul>
+        <ul style="padding: 0; list-style: none; margin-left: 0;"
+            id="listContainer"></ul>
       </div>
     </div>
   `;
 }
 
 function updateFilteredList() {
-  const inputField = document.getElementById("filterInput") as HTMLInputElement;
-  const listContainer = parent.document.getElementById("listContainer");
-  console.log(listContainer);
-  const filterText = inputField.value.toLowerCase();
+  const filterText = filterInput.value.toLowerCase();
   if (listContainer) {
     listContainer.innerHTML = "";
     const filteredItems = myWorkPackages.filter((item) =>
@@ -80,67 +77,38 @@ function createUI() {
     return;
   }
 
-  const styles = `.styled-list li {
-    padding: 0px;
-    color: #000; /* Black text color */
-  }
-  
-  .styled-list li:nth-child(odd) {
-    background-color: #0057B7; /* Blue background color */
-    color: #FFFFFF; /* Black text color */
-  }
-  
-  .styled-list li:nth-child(even) {
-    background-color: #003797; /* Yellow background color */
-    color: #FFFFFF; /* Black text color */
-  }
-  
-  .styled-list li.highlighted {
-    background-color: #FFDD00; /* Yellow background color */
-    color: #000000; /* Black text color */
-  }`;
-  var styleSheet = document.createElement("style");
-  styleSheet.innerText = styles;
-  document.head.appendChild(styleSheet);
-
   filterInput = document.getElementById("filterInput") as HTMLInputElement;
-  if (filterInput == null) {
+  listContainer = document.getElementById("listContainer") as HTMLLIElement;
+
+  if (filterInput == null || listContainer == null) {
     console.log("unable to add elements to app");
     return;
   }
 
   filterInput.addEventListener("keydown", async (e) => {
+    console.log(e);
     switch (e.key) {
       case "ArrowUp":
         console.log("Up");
+        e.preventDefault();
+        break;
       case "ArrowDown":
         console.log("Down");
+        e.preventDefault();
+        break;
       case "Enter":
         console.log("Enter");
         logseq.hideMainUI({ restoreEditingCursor: true });
         await logseq.Editor.insertAtEditingCursor("put stuff here");
-    }
-    e.preventDefault();
-  });
-
-  document.addEventListener(
-    "keydown",
-    function (e) {
-      console.log(e);
-      if (e.key === "ESC") {
+        e.preventDefault();
+        break;
+      case "Escape":
         logseq.hideMainUI({ restoreEditingCursor: true });
-      }
-      e.stopPropagation();
-    },
-    false
-  );
-
-  document.addEventListener("click", (e) => {
-    if (!(e.target as HTMLElement).closest(".emoji-picker__wrapper")) {
-      logseq.hideMainUI({ restoreEditingCursor: true });
+        e.preventDefault();
+        break;
     }
+    updateFilteredList();
   });
-
 }
 
 async function showUI(x: number, y: number) {
@@ -152,6 +120,7 @@ async function showUI(x: number, y: number) {
   selectedElement = -1;
   updateFilteredList();
   logseq.showMainUI();
+  filterInput.focus();
 }
 
 async function main() {
@@ -191,8 +160,9 @@ async function main() {
 
   logseq.Editor.registerSlashCommand("openproject", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
-    const x = pos ? pos.rect.x : 300;
-    const y = pos ? pos.rect.y : 300;
+    console.log(pos);
+    const x = pos ? pos.left + pos.rect.left : 300;
+    const y = pos ? pos.top + pos.rect.top : 300;
     await showUI(x, y);
   });
 }

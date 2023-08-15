@@ -1,0 +1,39 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: white;
+    opacity: 1;
+}
+  
+#app {
+    padding-top: 30vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+}
+  
+.styled-list li {
+    padding: 0px;
+    color: #000; /* Black text color */
+}
+  
+.styled-list li:nth-child(odd) {
+    background-color: #0057B7; /* Blue background color */
+    color: #FFFFFF; /* Black text color */
+}
+
+.styled-list li:nth-child(even) {
+    background-color: #003797; /* Yellow background color */
+    color: #FFFFFF; /* Black text color */
+}
+
+.styled-list li.highlighted {
+    background-color: #FFDD00; /* Yellow background color */
+    color: #000000; /* Black text color */
+}
