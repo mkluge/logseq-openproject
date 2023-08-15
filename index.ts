@@ -31,42 +31,65 @@ async function updateWorkPackages() {
   );
 }
 
-function website(x: number, y: number, text: string, tasks: string = "") {
-  return {
-    key: "opeproject-task-selection",
-    template: `
-    <div style="padding: 10px; overflow: auto;">
-    <input style="padding: 10px; margin-bottom: 10px;" autofocus data-on-keyup="updateFilteredList" type="text" id="filterInput" placeholder="type to filter ..."/>
-    <ul class="styled-list" id="listContainer">${tasks}</ul>
+function website(x: number, y: number, text: string, tasks: string = "") : string {
+  const list_style = `
+    padding: 0;
+    list-style: none;
+    margin-left: 0;
+
+  .styled-list li {
+    padding: 0px;
+    color: #000; /* Black text color */
+  }
+  
+  .styled-list li:nth-child(odd) {
+    background-color: #0057B7; /* Blue background color */
+    color: #FFFFFF; /* Black text color */
+  }
+  
+  .styled-list li:nth-child(even) {
+    background-color: #003797; /* Yellow background color */
+    color: #FFFFFF; /* Black text color */
+  }
+  
+  .styled-list li.highlighted {
+    background-color: #FFDD00; /* Yellow background color */
+    color: #000000; /* Black text color */
+  }`;
+
+  return `
+    <div style="left: ${x}px, top: ${y}px, width: 500px, height: auto,
+                backgroundColor: var(--ls-primary-background-color),
+                color: var(--ls-primary-text-color),
+                boxShadow: 1px 2px 5px var(--ls-secondary-background-color)">
+      <h3>${text}</h3>
+      <div style="padding: 10px; overflow: auto; 
+        <input style="padding: 10px; margin-bottom: 10px;" 
+              data-on-keyup="updateFilteredList" 
+              type="text" id="filterInput" 
+              placeholder="type to filter ..."/>
+        <ul style="padding: 0; list-style: none; margin-left: 0;" id="listContainer">${tasks}</ul>
+      </div>
     </div>
-  `,
-    style: {
-      left: x + "px",
-      top: y + "px",
-      width: "500px",
-      height: "auto",
-      backgroundColor: "var(--ls-primary-background-color)",
-      color: "var(--ls-primary-text-color)",
-      boxShadow: "1px 2px 5px var(--ls-secondary-background-color)",
-    },
-    attrs: {
-      title: text,
-    },
-  };
+  `;
 }
 
 async function showUI(x: number, y: number) {
   await updateWorkPackages();
-  const site = logseq.provideUI(
-    website(
-      x,
-      y,
-      "Packages",
-      myWorkPackages.map((wp) => {
-        return "<li>" + wp.subject + "</li>";
-      }).join("")
-    )
+  const htmlcode =  website( 
+    x, y, "Packages",
+    myWorkPackages.map((wp) => {
+      return "<li>" + wp.subject + "</li>";
+    }).join("")
   );
+  const app = document.getElementById('app');
+  if( app) {
+    app.innerHTML = htmlcode
+  } 
+  else{
+    console.log("app element not found")
+  }
+  logseq.showMainUI()
 }
 
 async function main() {
@@ -103,32 +126,7 @@ async function main() {
   }
   myself = me.data.name;
 
-  logseq.provideStyle(`
-    .styled-list {
-      padding: 0;
-      list-style: none;
-      margin-left: 0;
-    }
-
-    .styled-list li {
-      padding: 0px;
-      color: #000; /* Black text color */
-    }
-    
-    .styled-list li:nth-child(odd) {
-      background-color: #0057B7; /* Blue background color */
-      color: #FFFFFF; /* Black text color */
-    }
-    
-    .styled-list li:nth-child(even) {
-      background-color: #003797; /* Yellow background color */
-      color: #FFFFFF; /* Black text color */
-    }
-    
-    .styled-list li.highlighted {
-      background-color: #FFDD00; /* Yellow background color */
-      color: #000000; /* Black text color */
-    }`
+`
   );
   logseq.provideModel({
     async updateFilteredList() {
@@ -159,5 +157,7 @@ async function main() {
     await showUI(x, y);
   });
 }
+
+buildMainElement();
 
 logseq.ready(main).catch(console.error);
