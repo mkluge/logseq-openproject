@@ -51,7 +51,11 @@ function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
     openProjectURL +
     "/work_packages/" +
     wp.id! +
-    ")"
+    ") " +
+    "[[" +
+    wp._links.project.title +
+    "]] " +
+    "#OpenProject"
   );
 }
 
