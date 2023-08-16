@@ -34,6 +34,7 @@ html, body {
     padding: 2px;
     background-color: #292929;
     color: #FFFFFF;
+    width: 100%;
 }
 
 .headline {
@@ -52,13 +53,15 @@ html, body {
     padding: 0;
     margin-left: 0;
     margin-block-start: 10px;
-    margin-block-end: 3px;
+    margin-block-end: 10px;
+    width: 100%;
 }
 
 .styled-list li {
     padding: 4px;
     margin-top: 2px;
     color: #000; /* Black text color */
+    width: 100%;
 }
   
 .styled-list li:nth-child(odd) {

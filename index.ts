@@ -18,8 +18,10 @@ var myself: string = "";
 var selectedElement: number = -1;
 var filterInput: HTMLInputElement;
 var listContainer: HTMLLIElement;
+var commentField: HTMLTextAreaElement;
 var listIDs: Array<number>;
 var openProjectURL = "";
+var useComment: boolean = false;
 
 async function updateWorkPackages() {
   console.log("update work packages");
@@ -70,7 +72,10 @@ function website(text: string, tasks: string = ""): string {
         <input class="filterInput" type="text" id="filterInput" 
               placeholder="type to filter ..."/>
         <ul class="styled-list" id="listContainer"></ul>
-      </div>
+        <textarea style="display: none;" class="filterInput" rows="5" 
+                  id="commentField"
+                  placeholder="type comment ..."></textarea>
+        </div>
     </div>
   </div>
   `;
@@ -85,7 +90,6 @@ function checkMatches(item: WorkPackageModel): boolean {
     item.subject.toLowerCase() +
     item._links.project.title?.toLowerCase();
   filterText.split(" ").forEach((text) => {
-    console.log("filter " + itemtext + " for " + text);
     if (text.length > 0 && !itemtext.includes(text)) {
       result = false;
     }
@@ -126,8 +130,9 @@ function createUI(): void {
 
   filterInput = document.getElementById("filterInput") as HTMLInputElement;
   listContainer = document.getElementById("listContainer") as HTMLLIElement;
+  commentField = document.getElementById("commentField") as HTMLTextAreaElement;
 
-  if (filterInput == null || listContainer == null) {
+  if (filterInput == null || listContainer == null || commentField == null) {
     console.log("unable to add elements to app");
     return;
   }
@@ -159,11 +164,17 @@ function createUI(): void {
         e.preventDefault();
         break;
       case "Enter":
-        console.log("Enter");
+        // if comment is used and comment is empty
+        // jump to comment first
+        if (useComment && commentField.value.length == 0) {
+          commentField.focus();
+          commentField.select();
+          break;
+        }
         logseq.hideMainUI({ restoreEditingCursor: true });
         if (selectedElement != -1) {
           const id = listIDs[selectedElement];
-          const wp = myWorkPackages.find((wp) => wp.id !== id);
+          const wp = myWorkPackages.find((wp) => wp.id == id);
           if (wp) {
             await logseq.Editor.insertAtEditingCursor(
               opWorkpackageToLogseqEntry(wp)
@@ -184,6 +195,47 @@ function createUI(): void {
         );
       }
       listContainer.children[selectedElement].classList.add("highlighted");
+    }
+  });
+
+  commentField.addEventListener("keydown", async (e) => {
+    switch (e.key) {
+      case "Enter":
+        // if task is selected and non empty comment
+        // -> submit
+        if (selectedElement != -1 && commentField.value.length > 0) {
+          logseq.hideMainUI({ restoreEditingCursor: true });
+          const id = listIDs[selectedElement];
+          const wp = myWorkPackages.find((wp) => wp.id == id);
+          if (wp) {
+            await logseq.Editor.insertAtEditingCursor(
+              opWorkpackageToLogseqEntry(wp)
+            );
+            const currentBlock = await logseq.Editor.getCurrentBlock();
+            if (currentBlock) {
+              const newBlock = await logseq.Editor.insertBlock(
+                currentBlock.uuid,
+                commentField.value,
+                {
+                  sibling: true,
+                }
+              );
+              if (newBlock) {
+                await logseq.Editor.moveBlock(
+                  newBlock.uuid,
+                  currentBlock.uuid,
+                  { children: true }
+                );
+              }
+            }
+          }
+        }
+        e.preventDefault();
+        break;
+      case "Escape":
+        logseq.hideMainUI({ restoreEditingCursor: true });
+        e.preventDefault();
+        break;
     }
   });
 }
@@ -242,6 +294,17 @@ async function main() {
     console.log(pos);
     const x = pos ? pos.left + pos.rect.left : 300;
     const y = pos ? pos.top + pos.rect.top : 300;
+    useComment = false;
+    commentField.style.display = "none";
+    await showUI(x, y);
+  });
+  logseq.Editor.registerSlashCommand("openproject_comment", async () => {
+    const pos = await logseq.Editor.getEditingCursorPosition();
+    console.log(pos);
+    const x = pos ? pos.left + pos.rect.left : 300;
+    const y = pos ? pos.top + pos.rect.top : 300;
+    useComment = true;
+    commentField.style.display = "block";
     await showUI(x, y);
   });
 }
