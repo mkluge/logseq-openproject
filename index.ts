@@ -8,6 +8,7 @@ import {
   WorkPackagesApi,
   UsersApi,
   WorkPackagesApiCommentWorkPackageRequest,
+  WorkPackagesApiListWorkPackagesRequest,
   WorkPackageModel,
 } from "./openproject_api";
 
@@ -32,7 +33,10 @@ async function updateWorkPackages() {
   // FIXME: would like to call listWorkPackages with the filter
   //        but it throws a server error, probably incorrect usage
   //        of this feature
-  const workPackages = await workPackagesApi.listWorkPackages();
+  const listOptions : WorkPackagesApiListWorkPackagesRequest = {
+    pageSize: 20000,
+  }
+  const workPackages = await workPackagesApi.listWorkPackages(listOptions);
   myWorkPackages = workPackages.data._embedded.elements.filter(
     (wp) => wp._links.assignee?.title == myself
   );
@@ -287,9 +291,9 @@ async function main() {
   const me = await usersApi.viewUser({
     id: "me",
   });
+  console.log(me);
   if (me.status != 200) {
     console.log("Error unable to read user data");
-    console.log(me);
     return;
   }
   myself = me.data.name;
