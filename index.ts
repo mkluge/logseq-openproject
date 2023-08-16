@@ -118,6 +118,32 @@ function updateFilteredList(): void {
   }
 }
 
+async function submitData() {
+  logseq.hideMainUI({ restoreEditingCursor: true });
+  const id = listIDs[selectedElement];
+  const wp = myWorkPackages.find((wp) => wp.id == id);
+  if (wp) {
+    await logseq.Editor.insertAtEditingCursor(opWorkpackageToLogseqEntry(wp));
+    if (useComment) {
+      const currentBlock = await logseq.Editor.getCurrentBlock();
+      if (currentBlock) {
+        const newBlock = await logseq.Editor.insertBlock(
+          currentBlock.uuid,
+          commentField.value,
+          {
+            sibling: true,
+          }
+        );
+        if (newBlock) {
+          await logseq.Editor.moveBlock(newBlock.uuid, currentBlock.uuid, {
+            children: true,
+          });
+        }
+      }
+    }
+  }
+}
+
 function createUI(): void {
   const htmlcode = website("Select OpenProject Task", "");
   const app = document.getElementById("app");
@@ -171,16 +197,7 @@ function createUI(): void {
           commentField.select();
           break;
         }
-        logseq.hideMainUI({ restoreEditingCursor: true });
-        if (selectedElement != -1) {
-          const id = listIDs[selectedElement];
-          const wp = myWorkPackages.find((wp) => wp.id == id);
-          if (wp) {
-            await logseq.Editor.insertAtEditingCursor(
-              opWorkpackageToLogseqEntry(wp)
-            );
-          }
-        }
+        submitData();
         e.preventDefault();
         break;
       case "Escape":
@@ -204,31 +221,7 @@ function createUI(): void {
         // if task is selected and non empty comment
         // -> submit
         if (selectedElement != -1 && commentField.value.length > 0) {
-          logseq.hideMainUI({ restoreEditingCursor: true });
-          const id = listIDs[selectedElement];
-          const wp = myWorkPackages.find((wp) => wp.id == id);
-          if (wp) {
-            await logseq.Editor.insertAtEditingCursor(
-              opWorkpackageToLogseqEntry(wp)
-            );
-            const currentBlock = await logseq.Editor.getCurrentBlock();
-            if (currentBlock) {
-              const newBlock = await logseq.Editor.insertBlock(
-                currentBlock.uuid,
-                commentField.value,
-                {
-                  sibling: true,
-                }
-              );
-              if (newBlock) {
-                await logseq.Editor.moveBlock(
-                  newBlock.uuid,
-                  currentBlock.uuid,
-                  { children: true }
-                );
-              }
-            }
-          }
+          submitData();
         }
         e.preventDefault();
         break;
