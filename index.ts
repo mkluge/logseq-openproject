@@ -76,19 +76,21 @@ function website(text: string, tasks: string = ""): string {
   `;
 }
 
-function checkMatches( item: WorkPackageModel) : boolean {
-    var result = true;
-    const filterText = filterInput.value.toLowerCase();
-    // for each substring of filterText, check individually
-    const itemtext =
-      item.subject.toLowerCase() + item._links.project.title?.toLowerCase();
-    filterText.split(" ").forEach((text) => {
-      console.log("filter "+itemtext+ " for "+text);
-      if (text.length>0 && !itemtext.includes(text)) {
-        result = false;
-      }
-    });
-    return result;
+function checkMatches(item: WorkPackageModel): boolean {
+  var result = true;
+  const filterText = filterInput.value.toLowerCase();
+  // for each substring of filterText, check individually
+  const itemtext =
+    item.id +
+    item.subject.toLowerCase() +
+    item._links.project.title?.toLowerCase();
+  filterText.split(" ").forEach((text) => {
+    console.log("filter " + itemtext + " for " + text);
+    if (text.length > 0 && !itemtext.includes(text)) {
+      result = false;
+    }
+  });
+  return result;
 }
 
 function updateFilteredList(): void {
