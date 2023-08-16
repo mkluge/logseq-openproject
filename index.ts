@@ -18,6 +18,7 @@ var myself: string = "";
 var selectedElement: number = -1;
 var filterInput: HTMLInputElement;
 var listContainer: HTMLLIElement;
+var listIDs: Array<number>;
 
 async function updateWorkPackages() {
   console.log("update work packages");
@@ -32,6 +33,14 @@ async function updateWorkPackages() {
   myWorkPackages = workPackages.data._embedded.elements.filter(
     (wp) => wp._links.assignee?.title == myself
   );
+}
+
+function opWorkpackageToString(wp: WorkPackageModel): string {
+  return "ID" + wp.id! + " " + wp.subject + " " + wp._links.project;
+}
+
+function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
+  return "(" + "ID" + wp.id! + " " + wp.subject + ")[" + wp._links.self + "]";
 }
 
 function website(text: string, tasks: string = ""): string {
@@ -49,16 +58,18 @@ function website(text: string, tasks: string = ""): string {
   `;
 }
 
-function updateFilteredList() {
+function updateFilteredList(): void {
   const filterText = filterInput.value.toLowerCase();
   listContainer.innerHTML = "";
+  listIDs = [];
   const filteredItems = myWorkPackages.filter((item) =>
     item.subject.toLowerCase().includes(filterText)
   );
   filteredItems.forEach((item) => {
     const listItem = document.createElement("li");
-    listItem.textContent = item.subject;
+    listItem.textContent = opWorkpackageToString(item);
     listContainer.appendChild(listItem);
+    listIDs.push(item.id!);
   });
   // reset selection
   if (listContainer.childElementCount == 0) {
@@ -116,7 +127,15 @@ function createUI(): void {
       case "Enter":
         console.log("Enter");
         logseq.hideMainUI({ restoreEditingCursor: true });
-        await logseq.Editor.insertAtEditingCursor("put stuff here");
+        if (selectedElement != -1) {
+          const id = listIDs[selectedElement];
+          const wp = myWorkPackages.find((wp) => wp.id !== id);
+          if (wp) {
+            await logseq.Editor.insertAtEditingCursor(
+              opWorkpackageToLogseqEntry(wp)
+            );
+          }
+        }
         e.preventDefault();
         break;
       case "Escape":
