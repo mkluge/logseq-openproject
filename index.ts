@@ -37,7 +37,7 @@ async function updateWorkPackages() {
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
-  return "ID" + wp.id! + ": " + wp.subject + " " + wp._links.project;
+  return "ID" + wp.id! + ": " + wp.subject + " ["+wp._links.project.title+"]";
 }
 
 function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
