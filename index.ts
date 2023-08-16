@@ -19,6 +19,7 @@ var selectedElement: number = -1;
 var filterInput: HTMLInputElement;
 var listContainer: HTMLLIElement;
 var listIDs: Array<number>;
+var openProjectURL = "";
 
 async function updateWorkPackages() {
   console.log("update work packages");
@@ -40,7 +41,18 @@ function opWorkpackageToString(wp: WorkPackageModel): string {
 }
 
 function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
-  return "(" + "ID" + wp.id! + " " + wp.subject + ")[" + wp._links.self + "]";
+  console.log(wp);
+  return (
+    "[" +
+    "ID" +
+    wp.id! +
+    " " +
+    wp.subject +
+    "](" +
+    openProjectURL +
+    wp._links.self.href +
+    ")"
+  );
 }
 
 function website(text: string, tasks: string = ""): string {
@@ -171,7 +183,6 @@ async function showUI(x: number, y: number) {
 
 async function main() {
   var openProjectToken = "";
-  var openProjectURL = "";
 
   const loadSettings = () => {
     if (logseq.settings) {
