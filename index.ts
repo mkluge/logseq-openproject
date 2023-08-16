@@ -37,11 +37,10 @@ async function updateWorkPackages() {
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
-  return "ID" + wp.id! + " " + wp.subject + " " + wp._links.project;
+  return "ID" + wp.id! + ": " + wp.subject + " " + wp._links.project;
 }
 
 function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
-  console.log(wp);
   return (
     "[" +
     "ID" +
@@ -50,7 +49,8 @@ function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
     wp.subject +
     "](" +
     openProjectURL +
-    wp._links.self.href +
+    "/work_packages/" +
+    wp.id! +
     ")"
   );
 }
@@ -87,6 +87,7 @@ function updateFilteredList(): void {
   if (listContainer.childElementCount == 0) {
     selectedElement = -1;
   } else {
+    // auto-select first entry when this makes sense
     selectedElement = 0;
     listContainer.children[selectedElement].classList.add("highlighted");
   }
