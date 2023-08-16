@@ -37,7 +37,9 @@ async function updateWorkPackages() {
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
-  return "ID" + wp.id! + ": " + wp.subject + " ["+wp._links.project.title+"]";
+  return (
+    "ID" + wp.id! + ": " + wp.subject + " [" + wp._links.project.title + "]"
+  );
 }
 
 function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
@@ -74,13 +76,26 @@ function website(text: string, tasks: string = ""): string {
   `;
 }
 
+function checkMatches( item: WorkPackageModel) : boolean {
+    var result = true;
+    const filterText = filterInput.value.toLowerCase();
+    // for each substring of filterText, check individually
+    const itemtext =
+      item.subject.toLowerCase() + item._links.project.title?.toLowerCase();
+    filterText.split(" ").forEach((text) => {
+      console.log("filter "+itemtext+ " for "+text);
+      if (text.length>0 && !itemtext.includes(text)) {
+        result = false;
+      }
+    });
+    return result;
+}
+
 function updateFilteredList(): void {
-  const filterText = filterInput.value.toLowerCase();
   listContainer.innerHTML = "";
   listIDs = [];
-  const filteredItems = myWorkPackages.filter((item) =>
-    item.subject.toLowerCase().includes(filterText)
-  );
+  const filteredItems = myWorkPackages.filter(checkMatches);
+  console.log(filteredItems);
   filteredItems.forEach((item) => {
     const listItem = document.createElement("li");
     listItem.textContent = opWorkpackageToString(item);
