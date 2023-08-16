@@ -7,7 +7,7 @@ import {
   Configuration,
   WorkPackagesApi,
   UsersApi,
-  WorkPackagesApiListWorkPackagesRequest,
+  WorkPackagesApiCommentWorkPackageRequest,
   WorkPackageModel,
 } from "./openproject_api";
 
@@ -125,6 +125,7 @@ async function submitData() {
   if (wp) {
     await logseq.Editor.insertAtEditingCursor(opWorkpackageToLogseqEntry(wp));
     if (useComment) {
+      // add comment as child block
       const currentBlock = await logseq.Editor.getCurrentBlock();
       if (currentBlock) {
         const newBlock = await logseq.Editor.insertBlock(
@@ -140,6 +141,17 @@ async function submitData() {
           });
         }
       }
+      // add comment to work package in OpenProject
+      const newComment: WorkPackagesApiCommentWorkPackageRequest = {
+        id: id,
+        notify: true,
+        commentWorkPackageRequest: {
+          comment: {
+            raw: commentField.value,
+          },
+        },
+      };
+      await workPackagesApi.commentWorkPackage(newComment);
     }
   }
 }
