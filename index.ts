@@ -1,6 +1,21 @@
-// import { ProjectModel } from "./openproject_api/api";
-// import * as lcfg from "./config.json";
-// import axios, { AxiosResponse } from "axios";
+/*
+Copyright (C) 2023, Michael Kluge, vollseil@mailbox.org
+
+This program is free software: you can redistribute it and/or 
+modify it under the terms of the GNU General Public License as 
+published by the Free Software Foundation, either version 3 of 
+the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+General Public License for more details.
+
+You should have received a copy of the GNU General Public 
+License along with this program. If not, see 
+<https://www.gnu.org/licenses/>.
+*/
+
 import "@logseq/libs";
 import { settingsUI } from "./settings";
 import {
@@ -12,30 +27,30 @@ import {
   WorkPackageModel,
 } from "./openproject_api";
 
-var myWorkPackages: WorkPackageModel[];
-var usersApi: UsersApi = new UsersApi();
-var workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
-var myself: string = "";
-var selectedElement: number = -1;
-var filterInput: HTMLInputElement;
-var listContainer: HTMLLIElement;
-var commentField: HTMLTextAreaElement;
-var listIDs: Array<number>;
-var openProjectURL = "";
-var useComment: boolean = false;
+let myWorkPackages: WorkPackageModel[];
+let usersApi: UsersApi = new UsersApi();
+let workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
+let myself: string = "";
+let selectedElement: number = -1;
+let filterInput: HTMLInputElement;
+let listContainer: HTMLLIElement;
+let commentField: HTMLTextAreaElement;
+let listIDs: Array<number>;
+let openProjectURL = "";
+let useComment: boolean = false;
 
 async function updateWorkPackages() {
   console.log("update work packages");
-  const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
-  const filter = {
-    filters: JSON.stringify(filterMyself),
-  };
   // FIXME: would like to call listWorkPackages with the filter
   //        but it throws a server error, probably incorrect usage
   //        of this feature
-  const listOptions : WorkPackagesApiListWorkPackagesRequest = {
+  // const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
+  // const filter = {
+  //   filters: JSON.stringify(filterMyself),
+  // };
+  const listOptions: WorkPackagesApiListWorkPackagesRequest = {
     pageSize: 20000,
-  }
+  };
   const workPackages = await workPackagesApi.listWorkPackages(listOptions);
   myWorkPackages = workPackages.data._embedded.elements.filter(
     (wp) => wp._links.assignee?.title == myself
@@ -67,7 +82,7 @@ function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
   );
 }
 
-function website(text: string, tasks: string = ""): string {
+function website(text: string): string {
   return `
   <div class="rounded">
     <div class="maindiv">
@@ -86,7 +101,7 @@ function website(text: string, tasks: string = ""): string {
 }
 
 function checkMatches(item: WorkPackageModel): boolean {
-  var result = true;
+  let result = true;
   const filterText = filterInput.value.toLowerCase();
   // for each substring of filterText, check individually
   const itemtext =
@@ -265,7 +280,7 @@ async function showUI(x: number, y: number) {
 }
 
 async function main() {
-  var openProjectToken = "";
+  let openProjectToken = "";
 
   const loadSettings = () => {
     if (logseq.settings) {
