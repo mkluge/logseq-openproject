@@ -5,7 +5,9 @@ This plugin for [logseq](https://logseq.org) allows to link [OpenProject](https:
 
 Install the plugin via the market place.
 In the plugin settings you have to enter two values. The first one is the URL of your OpenProject
-site. The other one is an API access token. This token can be obtained in the Account settings of your OpenProject Account. *LINK LINK!!!!*
+site. The other one is an API access token. This token can be obtained in the Account settings of your OpenProject Account. See this 
+[Link](https://www.openproject.org/docs/getting-started/my-account/#access-tokens) for more explanations.
+
 # Usage
 
 At the moment the following features are supported:
