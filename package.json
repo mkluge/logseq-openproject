@@ -2,7 +2,7 @@
   "name": "logseq-openproject",
   "version": "0.0.1",
   "author": "yetiklee",
-  "main": "index.html",
+  "main": "dist/index.html",
   "description": "work with OpenProject packages in logseq",
   "license": "LGPL-3.0-or-later",
   "targets": {
