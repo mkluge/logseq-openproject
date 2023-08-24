@@ -13,10 +13,11 @@ on:
 env:
   PLUGIN_NAME: logseq-openproject
 
+permissions: write-all
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -48,7 +49,6 @@ jobs:
           allowUpdates: true
           draft: false
           prerelease: false
-          permissions: write-all
 
       - name: Upload zip file
         id: upload_zip
