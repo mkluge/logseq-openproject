@@ -48,6 +48,7 @@ jobs:
           allowUpdates: true
           draft: false
           prerelease: false
+          permissions: write-all
 
       - name: Upload zip file
         id: upload_zip
