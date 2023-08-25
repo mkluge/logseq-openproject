@@ -1,6 +1,6 @@
 {
   "name": "logseq-openproject",
-  "version": "0.0.1",
+  "version": "1.0.10",
   "author": "yetiklee",
   "main": "dist/index.html",
   "description": "work with OpenProject packages in logseq",
