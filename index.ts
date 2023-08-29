@@ -44,17 +44,20 @@ async function updateWorkPackages() {
   // FIXME: would like to call listWorkPackages with the filter
   //        but it throws a server error, probably incorrect usage
   //        of this feature
-  // const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
-  // const filter = {
-  //   filters: JSON.stringify(filterMyself),
-  // };
+  const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
+  //const filter = {
+  //  filters: JSON.stringify(filterMyself),
+  //};
   const listOptions: WorkPackagesApiListWorkPackagesRequest = {
     pageSize: 20000,
+    filters: JSON.stringify(filterMyself),
   };
   const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-  myWorkPackages = workPackages.data._embedded.elements.filter(
-    (wp) => wp._links.assignee?.title == myself
-  );
+  console.log(workPackages.data._embedded.elements);
+  myWorkPackages = workPackages.data._embedded.elements;
+  //myWorkPackages = workPackages.data._embedded.elements.filter(
+  //  (wp) => wp._links.assignee?.title == myself
+  //);
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
@@ -176,7 +179,7 @@ async function submitData() {
 }
 
 function createUI(): void {
-  const htmlcode = website("Select OpenProject Task", "");
+  const htmlcode = website("Select OpenProject Task");
   const app = document.getElementById("app");
   if (app) {
     app.innerHTML = htmlcode;
