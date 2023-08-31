@@ -40,6 +40,7 @@ let commentField: HTMLTextAreaElement;
 let listIDs: Array<number>;
 const typeMap: Map<string, number> = new Map();
 let openProjectURL = "";
+let openProjectToken = "";
 let useComment: boolean = false;
 let filterType: string = "";
 
@@ -290,30 +291,22 @@ async function showUI(x: number, y: number) {
   }, 100);
 }
 
-async function main() {
-  let openProjectToken = "";
-
-  const loadSettings = () => {
-    if (logseq.settings) {
-      openProjectToken = logseq.settings["OpenProjectToken"];
-      openProjectURL = logseq.settings["OpenProjectURL"];
-      filterType = logseq.settings[""];
-      const openProjectConfiguration = new Configuration({
-        basePath: openProjectURL,
-        username: "apikey",
-        password: openProjectToken,
-      });
-      usersApi = new UsersApi(openProjectConfiguration);
-      workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
-      typesApi = new TypesApi(openProjectConfiguration);
-    }
-  };
-
-  loadSettings();
-  logseq.onSettingsChanged(loadSettings);
-  createUI();
-
-  console.log("loaded config with URL " + openProjectURL);
+async function loadSettings(): void {
+  if (logseq.settings) {
+    openProjectToken = logseq.settings["OpenProjectToken"];
+    openProjectURL = logseq.settings["OpenProjectURL"];
+    filterType = logseq.settings[""];
+    const openProjectConfiguration = new Configuration({
+      basePath: openProjectURL,
+      username: "apikey",
+      password: openProjectToken,
+    });
+    usersApi = new UsersApi(openProjectConfiguration);
+    workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
+    typesApi = new TypesApi(openProjectConfiguration);
+    console.log("loaded config with URL " + openProjectURL);
+  }
+  
   // get my name in OpenProject
   const me = await usersApi.viewUser({
     id: "me",
@@ -332,6 +325,12 @@ async function main() {
     typeMap[el.name] = el.id;
   });
   settingsUI(Array.from(typeMap.keys()));
+}
+
+async function main() {
+  loadSettings();
+  logseq.onSettingsChanged(loadSettings);
+  createUI();
 
   logseq.Editor.registerSlashCommand("openproject", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
