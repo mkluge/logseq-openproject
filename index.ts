@@ -28,7 +28,7 @@ import {
   TypesApi,
 } from "./openproject_api";
 
-let myWorkPackages: WorkPackageModel[];
+let myWorkPackages: WorkPackageModel[] = [];
 let usersApi: UsersApi = new UsersApi();
 let workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
 let typesApi: TypesApi = new TypesApi();
@@ -37,7 +37,7 @@ let selectedElement: number = -1;
 let filterInput: HTMLInputElement;
 let listContainer: HTMLLIElement;
 let commentField: HTMLTextAreaElement;
-let listIDs: Array<number>;
+const listIDs: Array<number> = [];
 const typeMap: Map<string, number> = new Map();
 let openProjectURL = "";
 let openProjectToken = "";
@@ -45,17 +45,17 @@ let useComment: boolean = false;
 let filterType: string = "";
 
 async function updateWorkPackages() {
-  let filter = `{assignee:{operator:"=",values:[${myself}]}}`;
-  if (filterType.length > 0) {
+  let filter = `{"assignee":{operator:"=",values:[${myself}]}}`;
+  if (filterType.length > 0 && typeMap.has(filterType)) {
     const typeID = typeMap[filterType];
     filter += `,{type:{operator:"=",values:[${typeID}]}}`;
   }
   const listOptions: WorkPackagesApiListWorkPackagesRequest = {
     pageSize: 20000,
-    filters: JSON.stringify("[" + filter + "]"),
+    filters: "[" + filter + "]",
   };
   const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-  console.log(workPackages.data._embedded.elements);
+  // console.log(workPackages.data._embedded.elements);
   myWorkPackages = workPackages.data._embedded.elements;
 }
 
@@ -120,9 +120,8 @@ function checkMatches(item: WorkPackageModel): boolean {
 
 function updateFilteredList(): void {
   listContainer.innerHTML = "";
-  listIDs = [];
+  listIDs.length = 0;
   const filteredItems = myWorkPackages.filter(checkMatches);
-  console.log(filteredItems);
   filteredItems.forEach((item) => {
     const listItem = document.createElement("li");
     listItem.textContent = opWorkpackageToString(item);
@@ -275,17 +274,18 @@ async function showUI(x: number, y: number) {
   selectedElement = -1;
   updateFilteredList();
   logseq.showMainUI();
+
   setTimeout(() => {
     filterInput.focus();
     filterInput.select();
   }, 100);
 }
 
-async function loadSettings() {
+function loadSettings() {
   if (logseq.settings) {
     openProjectToken = logseq.settings["OpenProjectToken"];
     openProjectURL = logseq.settings["OpenProjectURL"];
-    filterType = logseq.settings[""];
+    filterType = logseq.settings["TaskTypeFilter"];
     const openProjectConfiguration = new Configuration({
       basePath: openProjectURL,
       username: "apikey",
@@ -294,8 +294,11 @@ async function loadSettings() {
     usersApi = new UsersApi(openProjectConfiguration);
     workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
     typesApi = new TypesApi(openProjectConfiguration);
+    console.log("loaded config with URL " + openProjectURL);
   }
+}
 
+async function loadOpenProjectBase() {
   // get my name in OpenProject
   usersApi
     .viewUser({
@@ -314,20 +317,20 @@ async function loadSettings() {
       response.data._embedded.elements.map((el) => {
         typeMap[el.name] = el.id;
       });
+      settingsUI(Array.from(typeMap.keys()));
     })
     .catch((error) => console.log(error));
-  settingsUI(Array.from(typeMap.keys()));
-  console.log("loaded config with URL " + openProjectURL);
 }
 
 async function main() {
   loadSettings();
   logseq.onSettingsChanged(loadSettings);
+  settingsUI();
   createUI();
+  loadOpenProjectBase();
 
   logseq.Editor.registerSlashCommand("openproject", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
-    console.log(pos);
     const x = pos ? pos.left + pos.rect.left : 300;
     const y = pos ? pos.top + pos.rect.top : 300;
     useComment = false;
@@ -336,10 +339,8 @@ async function main() {
   });
   logseq.Editor.registerSlashCommand("openproject_comment", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
-    console.log(pos);
     const x = pos ? pos.left + pos.rect.left : 300;
     const y = pos ? pos.top + pos.rect.top : 300;
-    useComment = true;
     commentField.style.display = "block";
     await showUI(x, y);
   });
