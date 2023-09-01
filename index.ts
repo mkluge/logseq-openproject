@@ -45,17 +45,29 @@ let useComment: boolean = false;
 let filterType: string = "";
 
 async function updateWorkPackages() {
-  let filter = `{"assignee":{operator:"=",values:[${myself}]}}`;
+  const filterStruct = {
+    assignee: {
+      operator: "=",
+      values: [myself],
+    },
+  };
+  let filter = JSON.stringify(filterStruct);
   if (filterType.length > 0 && typeMap.has(filterType)) {
     const typeID = typeMap[filterType];
-    filter += `,{type:{operator:"=",values:[${typeID}]}}`;
+    const filterStruct2 = {
+      type: {
+        operator: "=",
+        values: [typeID],
+      },
+    };
+    filter += "," + JSON.stringify(filterStruct2);
   }
+  console.log(filter);
   const listOptions: WorkPackagesApiListWorkPackagesRequest = {
     pageSize: 20000,
     filters: "[" + filter + "]",
   };
   const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-  // console.log(workPackages.data._embedded.elements);
   myWorkPackages = workPackages.data._embedded.elements;
 }
 
