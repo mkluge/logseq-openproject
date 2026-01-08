@@ -46,27 +46,31 @@ let filterType: string = "";
 
 async function updateWorkPackages() {
   console.log("update work packages");
-  // FIXME: would like to call listWorkPackages with the filter
-  //        but it throws a server error, probably incorrect usage
-  //        of this feature
-  const filter = [{ assignee: { operator: "=", values: [myself] } }];
-  if (filterType.length > 0) {
-    const typeID = typeMap[filterType];
-    filter.push({ type: { operator: "=", values: [typeID] } });
+  try {
+    // Verbesserte Implementierung für die API-Filterung
+    const filter = [{ assignee: { operator: "=", values: [myself] } }];
+    if (filterType && filterType.length > 0) {
+      const typeID = typeMap[filterType];
+      if (typeID) {
+        filter.push({ type: { operator: "=", values: [typeID] } });
+      } else {
+        console.warn(`Filter type "${filterType}" not found in available types`);
+      }
+    }
+    
+    const listOptions: WorkPackagesApiListWorkPackagesRequest = {
+      pageSize: 20000,
+      filters: JSON.stringify(filter),
+    };
+    
+    const workPackages = await workPackagesApi.listWorkPackages(listOptions);
+    console.log(workPackages.data._embedded.elements);
+    myWorkPackages = workPackages.data._embedded.elements;
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Arbeitspakete:", error);
+    // Hier könnte eine Benutzerbenachrichtigung angezeigt werden
+    myWorkPackages = [];
   }
-  //const filter = {
-  //  filters: JSON.stringify(filterMyself),
-  //};
-  const listOptions: WorkPackagesApiListWorkPackagesRequest = {
-    pageSize: 20000,
-    filters: JSON.stringify(filter),
-  };
-  const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-  console.log(workPackages.data._embedded.elements);
-  myWorkPackages = workPackages.data._embedded.elements;
-  //myWorkPackages = workPackages.data._embedded.elements.filter(
-  //  (wp) => wp._links.assignee?.title == myself
-  //);
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
@@ -295,7 +299,7 @@ async function loadSettings(): void {
   if (logseq.settings) {
     openProjectToken = logseq.settings["OpenProjectToken"];
     openProjectURL = logseq.settings["OpenProjectURL"];
-    filterType = logseq.settings[""];
+    filterType = logseq.settings["TaskTypeFilter"] || "";
     const openProjectConfiguration = new Configuration({
       basePath: openProjectURL,
       username: "apikey",
