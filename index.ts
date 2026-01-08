@@ -25,36 +25,52 @@ import {
   WorkPackagesApiCommentWorkPackageRequest,
   WorkPackagesApiListWorkPackagesRequest,
   WorkPackageModel,
+  TypesApi,
 } from "./openproject_api";
 
 let myWorkPackages: WorkPackageModel[];
 let usersApi: UsersApi = new UsersApi();
 let workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
-let myself: string = "";
+let typesApi: TypesApi = new TypesApi();
+let myself: number;
 let selectedElement: number = -1;
 let filterInput: HTMLInputElement;
 let listContainer: HTMLLIElement;
 let commentField: HTMLTextAreaElement;
 let listIDs: Array<number>;
+const typeMap: Map<string, number> = new Map();
 let openProjectURL = "";
+let openProjectToken = "";
 let useComment: boolean = false;
+let filterType: string = "";
 
 async function updateWorkPackages() {
   console.log("update work packages");
-  // FIXME: would like to call listWorkPackages with the filter
-  //        but it throws a server error, probably incorrect usage
-  //        of this feature
-  // const filterMyself = [{ assignee: { operator: "**", values: [myself] } }];
-  // const filter = {
-  //   filters: JSON.stringify(filterMyself),
-  // };
-  const listOptions: WorkPackagesApiListWorkPackagesRequest = {
-    pageSize: 20000,
-  };
-  const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-  myWorkPackages = workPackages.data._embedded.elements.filter(
-    (wp) => wp._links.assignee?.title == myself
-  );
+  try {
+    // Verbesserte Implementierung für die API-Filterung
+    const filter = [{ assignee: { operator: "=", values: [myself] } }];
+    if (filterType && filterType.length > 0) {
+      const typeID = typeMap[filterType];
+      if (typeID) {
+        filter.push({ type: { operator: "=", values: [typeID] } });
+      } else {
+        console.warn(`Filter type "${filterType}" not found in available types`);
+      }
+    }
+    
+    const listOptions: WorkPackagesApiListWorkPackagesRequest = {
+      pageSize: 20000,
+      filters: JSON.stringify(filter),
+    };
+    
+    const workPackages = await workPackagesApi.listWorkPackages(listOptions);
+    console.log(workPackages.data._embedded.elements);
+    myWorkPackages = workPackages.data._embedded.elements;
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Arbeitspakete:", error);
+    // Hier könnte eine Benutzerbenachrichtigung angezeigt werden
+    myWorkPackages = [];
+  }
 }
 
 function opWorkpackageToString(wp: WorkPackageModel): string {
@@ -176,7 +192,7 @@ async function submitData() {
 }
 
 function createUI(): void {
-  const htmlcode = website("Select OpenProject Task", "");
+  const htmlcode = website("Select OpenProject Task");
   const app = document.getElementById("app");
   if (app) {
     app.innerHTML = htmlcode;
@@ -279,29 +295,22 @@ async function showUI(x: number, y: number) {
   }, 100);
 }
 
-async function main() {
-  let openProjectToken = "";
-
-  const loadSettings = () => {
-    if (logseq.settings) {
-      openProjectToken = logseq.settings["OpenProjectToken"];
-      openProjectURL = logseq.settings["OpenProjectURL"];
-      const openProjectConfiguration = new Configuration({
-        basePath: openProjectURL,
-        username: "apikey",
-        password: openProjectToken,
-      });
-      usersApi = new UsersApi(openProjectConfiguration);
-      workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
-    }
-  };
-
-  loadSettings();
-  logseq.onSettingsChanged(loadSettings);
-  settingsUI();
-  createUI();
-
-  console.log("loaded config with URL " + openProjectURL);
+async function loadSettings(): void {
+  if (logseq.settings) {
+    openProjectToken = logseq.settings["OpenProjectToken"];
+    openProjectURL = logseq.settings["OpenProjectURL"];
+    filterType = logseq.settings["TaskTypeFilter"] || "";
+    const openProjectConfiguration = new Configuration({
+      basePath: openProjectURL,
+      username: "apikey",
+      password: openProjectToken,
+    });
+    usersApi = new UsersApi(openProjectConfiguration);
+    workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
+    typesApi = new TypesApi(openProjectConfiguration);
+    console.log("loaded config with URL " + openProjectURL);
+  }
+  
   // get my name in OpenProject
   const me = await usersApi.viewUser({
     id: "me",
@@ -311,7 +320,21 @@ async function main() {
     console.log("Error unable to read user data");
     return;
   }
-  myself = me.data.name;
+  myself = me.data.id;
+
+  const response = await typesApi.listAllTypes();
+  typeMap.clear();
+  // type not well defined
+  response.data._embedded.elements.map((el) => {
+    typeMap[el.name] = el.id;
+  });
+  settingsUI(Array.from(typeMap.keys()));
+}
+
+async function main() {
+  loadSettings();
+  logseq.onSettingsChanged(loadSettings);
+  createUI();
 
   logseq.Editor.registerSlashCommand("openproject", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
