@@ -1,15 +1,18 @@
-# Logseq Plugin for OpenProject
+# Logseq Plugin for GitLab
 
-This plugin for [logseq](https://logseq.org) allows to link [OpenProject](https://openproject.org) tasks into pages and the journals.
+This plugin for [logseq](https://logseq.org) allows linking GitLab issues into pages and journals.
+
 # Setup
 
-Install the plugin via the market place.
-In the plugin settings you have to enter two values. The first one is the URL of your OpenProject
-site. The other one is an API access token. This token can be obtained in the Account settings of your OpenProject Account. See this 
-[Link](https://www.openproject.org/docs/getting-started/my-account/#access-tokens) for more explanations.
+Install the plugin via the market place. In the plugin settings you have to enter the URL of your GitLab instance and a Personal Access Token with `api` scope.
+
+Optional settings:
+- Limit issues to specific project IDs.
+- Filter by labels.
+- Choose issue state (opened, closed, all).
 
 # Usage
 
 At the moment the following features are supported:
-* /openproject : Link a task that is assigned to you into the current page
-* /openproject_comment: Link a task that is assigned to you into the current page and add an comment to the task in OpenProject and Logseq
+* /gitlab : Link an issue that is assigned to you into the current page
+* /gitlab_comment: Link an issue that is assigned to you into the current page and add a comment to the issue in GitLab and Logseq
