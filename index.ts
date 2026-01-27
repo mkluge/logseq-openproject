@@ -17,85 +17,86 @@ License along with this program. If not, see
 */
 
 import "@logseq/libs";
+import axios from "axios";
 import { settingsUI } from "./settings";
-import {
-  Configuration,
-  WorkPackagesApi,
-  UsersApi,
-  WorkPackagesApiCommentWorkPackageRequest,
-  WorkPackagesApiListWorkPackagesRequest,
-  WorkPackageModel,
-  TypesApi,
-} from "./openproject_api";
 
-let myWorkPackages: WorkPackageModel[];
-let usersApi: UsersApi = new UsersApi();
-let workPackagesApi: WorkPackagesApi = new WorkPackagesApi();
-let typesApi: TypesApi = new TypesApi();
-let myself: number;
+type GitLabIssue = {
+  id: number;
+  iid: number;
+  project_id: number;
+  title: string;
+  web_url: string;
+  labels: string[];
+  state: string;
+};
+
+let myIssues: GitLabIssue[] = [];
 let selectedElement: number = -1;
 let filterInput: HTMLInputElement;
 let listContainer: HTMLLIElement;
 let commentField: HTMLTextAreaElement;
-let listIDs: Array<number>;
-const typeMap: Map<string, number> = new Map();
-let openProjectURL = "";
-let openProjectToken = "";
+let listIDs: Array<number> = [];
+let gitlabUrl = "";
+let gitlabToken = "";
+let projectIdsFilter: number[] = [];
+let labelFilter: string[] = [];
+let stateFilter: "opened" | "closed" | "all" = "opened";
 let useComment: boolean = false;
-let filterType: string = "";
-
-async function updateWorkPackages() {
-  console.log("update work packages");
+async function updateIssues() {
+  console.log("update gitlab issues");
   try {
-    // Verbesserte Implementierung für die API-Filterung
-    const filter = [{ assignee: { operator: "=", values: [myself] } }];
-    if (filterType && filterType.length > 0) {
-      const typeID = typeMap[filterType];
-      if (typeID) {
-        filter.push({ type: { operator: "=", values: [typeID] } });
-      } else {
-        console.warn(`Filter type "${filterType}" not found in available types`);
+    const params: Record<string, string | number | boolean> = {
+      scope: "assigned_to_me",
+      per_page: 100,
+    };
+    if (stateFilter !== "all") {
+      params.state = stateFilter;
+    }
+    if (labelFilter.length > 0) {
+      params.labels = labelFilter.join(",");
+    }
+
+    const issues: GitLabIssue[] = [];
+    let page = 1;
+    while (true) {
+      const response = await axios.get(`${gitlabUrl}/api/v4/issues`, {
+        headers: {
+          "PRIVATE-TOKEN": gitlabToken,
+        },
+        params: {
+          ...params,
+          page,
+        },
+      });
+      if (!Array.isArray(response.data) || response.data.length === 0) {
+        break;
+      }
+      issues.push(...response.data);
+      page += 1;
+      if (response.data.length < 100) {
+        break;
       }
     }
-    
-    const listOptions: WorkPackagesApiListWorkPackagesRequest = {
-      pageSize: 20000,
-      filters: JSON.stringify(filter),
-    };
-    
-    const workPackages = await workPackagesApi.listWorkPackages(listOptions);
-    console.log(workPackages.data._embedded.elements);
-    myWorkPackages = workPackages.data._embedded.elements;
+
+    if (projectIdsFilter.length > 0) {
+      myIssues = issues.filter((issue) =>
+        projectIdsFilter.includes(issue.project_id)
+      );
+    } else {
+      myIssues = issues;
+    }
   } catch (error) {
-    console.error("Fehler beim Abrufen der Arbeitspakete:", error);
-    // Hier könnte eine Benutzerbenachrichtigung angezeigt werden
-    myWorkPackages = [];
+    console.error("Fehler beim Abrufen der GitLab Issues:", error);
+    myIssues = [];
   }
 }
 
-function opWorkpackageToString(wp: WorkPackageModel): string {
-  return (
-    "ID" + wp.id! + ": " + wp.subject + " [" + wp._links.project.title + "]"
-  );
+function gitlabIssueToString(issue: GitLabIssue): string {
+  return `#${issue.iid}: ${issue.title} [${issue.project_id}]`;
 }
 
-function opWorkpackageToLogseqEntry(wp: WorkPackageModel): string {
-  return (
-    "[" +
-    "ID" +
-    wp.id! +
-    " " +
-    wp.subject +
-    "](" +
-    openProjectURL +
-    "/work_packages/" +
-    wp.id! +
-    ") " +
-    "[[" +
-    wp._links.project.title +
-    "]] " +
-    "#OpenProject"
-  );
+function gitlabIssueToLogseqEntry(issue: GitLabIssue): string {
+  return `[#${issue.iid} ${issue.title}](${issue.web_url}) #GitLab`;
 }
 
 function website(text: string): string {
@@ -116,14 +117,14 @@ function website(text: string): string {
   `;
 }
 
-function checkMatches(item: WorkPackageModel): boolean {
+function checkMatches(item: GitLabIssue): boolean {
   let result = true;
   const filterText = filterInput.value.toLowerCase();
   // for each substring of filterText, check individually
   const itemtext =
-    item.id +
-    item.subject.toLowerCase() +
-    item._links.project.title?.toLowerCase();
+    item.iid +
+    item.title.toLowerCase() +
+    String(item.project_id);
   filterText.split(" ").forEach((text) => {
     if (text.length > 0 && !itemtext.includes(text)) {
       result = false;
@@ -135,13 +136,13 @@ function checkMatches(item: WorkPackageModel): boolean {
 function updateFilteredList(): void {
   listContainer.innerHTML = "";
   listIDs = [];
-  const filteredItems = myWorkPackages.filter(checkMatches);
+  const filteredItems = myIssues.filter(checkMatches);
   console.log(filteredItems);
   filteredItems.forEach((item) => {
     const listItem = document.createElement("li");
-    listItem.textContent = opWorkpackageToString(item);
+    listItem.textContent = gitlabIssueToString(item);
     listContainer.appendChild(listItem);
-    listIDs.push(item.id!);
+    listIDs.push(item.id);
   });
   // reset selection
   if (listContainer.childElementCount == 0) {
@@ -156,9 +157,11 @@ function updateFilteredList(): void {
 async function submitData() {
   logseq.hideMainUI({ restoreEditingCursor: true });
   const id = listIDs[selectedElement];
-  const wp = myWorkPackages.find((wp) => wp.id == id);
-  if (wp) {
-    await logseq.Editor.insertAtEditingCursor(opWorkpackageToLogseqEntry(wp));
+  const issue = myIssues.find((issue) => issue.id == id);
+  if (issue) {
+    await logseq.Editor.insertAtEditingCursor(
+      gitlabIssueToLogseqEntry(issue)
+    );
     if (useComment) {
       // add comment as child block
       const currentBlock = await logseq.Editor.getCurrentBlock();
@@ -176,23 +179,24 @@ async function submitData() {
           });
         }
       }
-      // add comment to work package in OpenProject
-      const newComment: WorkPackagesApiCommentWorkPackageRequest = {
-        id: id,
-        notify: true,
-        commentWorkPackageRequest: {
-          comment: {
-            raw: commentField.value,
-          },
+      // add comment to GitLab issue
+      await axios.post(
+        `${gitlabUrl}/api/v4/projects/${issue.project_id}/issues/${issue.iid}/notes`,
+        {
+          body: commentField.value,
         },
-      };
-      await workPackagesApi.commentWorkPackage(newComment);
+        {
+          headers: {
+            "PRIVATE-TOKEN": gitlabToken,
+          },
+        }
+      );
     }
   }
 }
 
 function createUI(): void {
-  const htmlcode = website("Select OpenProject Task");
+  const htmlcode = website("Select GitLab Issue");
   const app = document.getElementById("app");
   if (app) {
     app.innerHTML = htmlcode;
@@ -281,7 +285,7 @@ function createUI(): void {
 }
 
 async function showUI(x: number, y: number) {
-  await updateWorkPackages();
+  await updateIssues();
   Object.assign(filterInput.style, {
     top: x + "px",
     left: y + "px",
@@ -297,38 +301,25 @@ async function showUI(x: number, y: number) {
 
 async function loadSettings(): void {
   if (logseq.settings) {
-    openProjectToken = logseq.settings["OpenProjectToken"];
-    openProjectURL = logseq.settings["OpenProjectURL"];
-    filterType = logseq.settings["TaskTypeFilter"] || "";
-    const openProjectConfiguration = new Configuration({
-      basePath: openProjectURL,
-      username: "apikey",
-      password: openProjectToken,
-    });
-    usersApi = new UsersApi(openProjectConfiguration);
-    workPackagesApi = new WorkPackagesApi(openProjectConfiguration);
-    typesApi = new TypesApi(openProjectConfiguration);
-    console.log("loaded config with URL " + openProjectURL);
+    gitlabToken = logseq.settings["GitLabToken"] || "";
+    gitlabUrl = logseq.settings["GitLabURL"] || "";
+    const projectIdsRaw = logseq.settings["GitLabProjectIds"] || "";
+    projectIdsFilter = projectIdsRaw
+      .split(",")
+      .map((value: string) => Number(value.trim()))
+      .filter((value: number) => !Number.isNaN(value) && value > 0);
+    const labelsRaw = logseq.settings["GitLabLabelFilter"] || "";
+    labelFilter = labelsRaw
+      .split(",")
+      .map((value: string) => value.trim())
+      .filter((value: string) => value.length > 0);
+    stateFilter =
+      (logseq.settings["GitLabState"] as "opened" | "closed" | "all") ||
+      "opened";
+    console.log("loaded config with URL " + gitlabUrl);
   }
-  
-  // get my name in OpenProject
-  const me = await usersApi.viewUser({
-    id: "me",
-  });
-  console.log(me);
-  if (me.status != 200) {
-    console.log("Error unable to read user data");
-    return;
-  }
-  myself = me.data.id;
 
-  const response = await typesApi.listAllTypes();
-  typeMap.clear();
-  // type not well defined
-  response.data._embedded.elements.map((el) => {
-    typeMap[el.name] = el.id;
-  });
-  settingsUI(Array.from(typeMap.keys()));
+  settingsUI();
 }
 
 async function main() {
@@ -336,7 +327,7 @@ async function main() {
   logseq.onSettingsChanged(loadSettings);
   createUI();
 
-  logseq.Editor.registerSlashCommand("openproject", async () => {
+  logseq.Editor.registerSlashCommand("gitlab", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
     console.log(pos);
     const x = pos ? pos.left + pos.rect.left : 300;
@@ -345,7 +336,7 @@ async function main() {
     commentField.style.display = "none";
     await showUI(x, y);
   });
-  logseq.Editor.registerSlashCommand("openproject_comment", async () => {
+  logseq.Editor.registerSlashCommand("gitlab_comment", async () => {
     const pos = await logseq.Editor.getEditingCursorPosition();
     console.log(pos);
     const x = pos ? pos.left + pos.rect.left : 300;
